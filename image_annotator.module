@@ -1,0 +1,18 @@
+<?php
+// $Id$
+/**
+ * @file
+ *
+ */
+/**
+ * Implements hook_form_alter()
+ */
+function image_annotator_form_alter(&$form, &$form_state, $form_id) {
+  //if (strpos('node_form', $form_id) !== FALSE) {
+  if ($form_id == 'layout_node_form') {
+    // Add hidden fields + buttons for coordinates in the field collection field_equipment_items
+    // Link it to the image field
+    // Do some js magic
+    drupal_add_js(drupal_get_path('module', 'image_annotator') . '/image_annotator.js');
+  }
+}
