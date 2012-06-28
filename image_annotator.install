@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function image_annotator_schema() {
+  $schema = array();
+  $schema['image_annotator_coordinates'] = array(
+    'description' => t('Store image annotations'),
+    'fields' => array(
+      'iacid' => array(
+        'description' => t('Image annotator coordinates id'),
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'x' => array(
+        'description' => t('Image annotator coordinate x'),
+        'type' => 'float',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ),
+      'y'=> array(
+        'description' => t('Image annotator coordinate y'),
+        'type' => 'float',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ),
+      'entity_id' => array(
+        'description' => t('The entity id'),
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'entity_type' => array(
+        'description' => t('The entity type'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => 'node',
+      ),
+      'field' => array(
+        'description' => t('The field'),
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ),
+      'language' => array(
+        'description' => t('The field language'),
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+        'defualt' => 'und',
+      ),
+      'delta' => array(
+        'description' => t('The field delta'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'defualt' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'ia_entity_field' => array('entity_id', 'entity_type', 'field'),
+      'ia_entity' => array('entity_id', 'entity_type'),
+    ),
+    'primary key' => array('iacid'),
+  );
+  return $schema;
+}

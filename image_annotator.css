@@ -1,0 +1,10 @@
+span.image-annotator-pointer, span.image-annotator-pointer-label {
+  background-color: #0074BD;
+  color: white;
+  padding: 0 2px;
+}
+
+span.image-annotator-pointer-label {
+  margin: 0 3px 0 0;
+}
+
