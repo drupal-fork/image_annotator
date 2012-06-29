@@ -5,133 +5,133 @@
  *
  */
 /**
- * Implements hook_form_alter()
+ * Implements hook_field_info()
  */
-function image_annotator_form_alter(&$form, &$form_state, $form_id) {
-  //if (strpos('node_form', $form_id) !== FALSE) {
-  if ($form_id == 'layout_node_form') {
-    // Add hidden fields + buttons for coordinates in the field collection field_equipment_items
-    $lang = $form['field_equipment_items']['#language'];
-    foreach (element_children($form['field_equipment_items'][$lang]) as $child) {
-      $form['field_equipment_items'][$lang][$child]['image_annotator_container'] = array(
-        '#type' => 'container',
-        '#title' => t('Place on image'),
-      );
-      $form['field_equipment_items'][$lang][$child]['image_annotator_container']['image_annotator_button'] = array(
-        '#type' => 'button',
-        '#value' => t('Place on image'),
-        '#attributes' => array(
-          'class' => array('image-annotator-button'),
-          'rel' => 'edit-field-floorplan',
-          'id' => 'field_equipment_items__' . $lang . '__' . $child . '__button',
-        ),
-      );
-      $form['field_equipment_items'][$lang][$child]['image_annotator_container']['image_annotator_coordinates'] = array(
-        '#type' => 'hidden',
-        '#value' => image_annotator_stringify_coordinates(image_annotator_load_coordinates('field_equipment_items', $form['#node']->nid, array('language' => $lang, 'delta' => $child))),
-        '#attributes' => array(
-          'id' => 'field_equipment_items__' . $lang . '__' . $child . '__coordinates',
-          'class' => array('image-annotator-pointers'),
-        )
-      );
+function image_annotator_field_info() {
+  return array(
+    'image_annotator' => array(
+      'label' => t('Image Annotator'),
+      'default_formatter' => 'image_annotator',
+      'default_widget' => 'image_annotator_hidden',
+      'instance_settings' => array(
+        'image_field' => '',
+      ),
+    )
+  );
+}
+
+/**
+ * Implements hook_field_is_empty()
+ */
+function image_annotator_field_is_empty($item, $field) {
+  return empty($item['value']);
+}
+
+/**
+ * Implements hook_field_formatter_info()
+ */
+function image_annotator_field_formatter_info() {
+  return array(
+    'image_annotator' => array(
+      'label' => t('Default'),
+      'field types' => array('image_annotator'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view()
+ */
+function image_annotator_field_formatter_view ($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $settings = $instance['settings'];
+  $element = array();
+
+  foreach ($items as $delta => $item) {
+    $text = '';
+
+    if (isset($item['value'])) {
+      $text = $item['value'];
     }
-    // Do some js magic
-    drupal_add_js(drupal_get_path('module', 'image_annotator') . '/image_annotator.js');
-    drupal_add_css(drupal_get_path('module', 'image_annotator') . '/image_annotator.css');
-    array_unshift($form['actions']['submit']['#submit'], 'image_annotator_submit_annotations');
+    $element[$delta]['image_annotator_coordinates'] = array(
+      '#type' => 'hidden',
+      '#value' => $text,
+      '#attributes' => array(
+        'id' => $field['field_name'] . '__' . $langcode . '__' . $delta . '__coordinates',
+        'class' => array('image-annotator-pointers'),
+      )
+    );
+    $element[$delta]['image_annotator_button'] = array(
+      '#type' => 'hidden',
+      '#value' => '',
+      '#attributes' => array(
+        'class' => array('image-annotator-button'),
+        'rel' => 'field-name-' . drupal_clean_css_identifier($settings['image_field']),
+        'id' => $field['field_name'] . '__' . $langcode . '__' . $delta . '__button',
+      ),
+    );
   }
-}
-
-function image_annotator_entity_view_alter(&$build, $type) {
-  static $info = array();
-  $field = 'field_equipment_items';
-  if (empty($info)) {
-    $info = field_info_field($field);
-  }
-  if ($info['type'] == 'field_collection' && $type == 'field_collection_item' && $build['#bundle'] == $field){
-    $host_entity_wrapper = field_collection_item_get_host_entity($build['#entity']);
-    $host_entity = $host_entity_wrapper->raw();
-    if (isset($host_entity->{$field})) {
-      foreach (element_children($host_entity->{$field}) as $language) {
-        foreach (element_children($host_entity->{$field}[$language]) as $delta) {
-          if ($host_entity->{$field}[$language][$delta]['value'] == $build['#entity']->item_id) {
-            $first_child = reset(element_children($build));
-            $build['image_annotator_coordinates'] = array(
-              '#type' => 'hidden',
-              '#value' => image_annotator_stringify_coordinates(image_annotator_load_coordinates($field, $host_entity_wrapper->getIdentifier(), array('language' => $language, 'delta' => $delta))),
-              '#attributes' => array(
-                'id' => $field . '__' . $language . '__' . $delta . '__coordinates',
-                'class' => array('image-annotator-pointers'),
-              )
-            );
-            $build['image_annotator_button'] = array(
-              '#type' => 'hidden',
-              '#value' => '',
-              '#attributes' => array(
-                'class' => array('image-annotator-button'),
-                'rel' => 'field-name-field-floorplan',
-                'id' => $field . '__' . $language . '__' . $delta . '__button',
-              ),
-            );
-            drupal_add_js(drupal_get_path('module', 'image_annotator') . '/image_annotator.js');
-            drupal_add_css(drupal_get_path('module', 'image_annotator') . '/image_annotator.css');
-          }
-        }
-      }
-    }
-  }
+  drupal_add_js(drupal_get_path('module', 'image_annotator') . '/image_annotator.js');
+  drupal_add_css(drupal_get_path('module', 'image_annotator') . '/image_annotator.css');
+  return $element;
 }
 
 /**
- * Submit callback
+ * Implements hook_field_instance_settings_form()
  */
-function image_annotator_submit_annotations($form, $form_state) {
-  foreach ($form_state['input']['field_equipment_items'] as $lang => $children) {
-    foreach ($children as $delta => $child) {
-      $coordinates = drupal_json_decode('[' . $child['image_annotator_container']['image_annotator_coordinates'] . ']');
-      foreach ($coordinates as $coordinate) {
-        $coordinate['entity_id'] = $form_state['node']->nid;
-        image_annotator_save_coordinates($coordinate);
-      }
-    }
-  }
+function image_annotator_field_instance_settings_form($field, $instance) {
+  $settings = $instance['settings'];
+  $fields = field_info_fields();
+  $options = drupal_map_assoc(array_keys(array_filter($fields, 'image_annotator_is_image_field')));
+  $form['image_field'] = array(
+    '#type' => 'select',
+    '#options' => $options,
+    '#required' => TRUE,
+    '#default_value' => $settings['image_field'],
+    '#description' => t('Choose the image field you want to annotate'),
+    '#title' => t('Image field'),
+  );
+  return $form;
 }
 
 /**
- * Save coordinates.
+ * Implements hook_field_widget_info()
  */
-function image_annotator_save_coordinates($coordinates) {
-  $coordinates = (object)$coordinates;
-  $primary_keys = array();
-  if (property_exists($coordinates, 'iacid')) {
-    $primary_keys[] = 'iacid';
-  }
-  if (drupal_write_record('image_annotator_coordinates', $coordinates, $primary_keys) === FALSE) {
-    return FALSE;
-  }
-  return $coordinates;
+function image_annotator_field_widget_info() {
+  return array(
+    'image_annotator_hidden' => array(
+      'label' => t('Image Annotator'),
+      'field types' => array('image_annotator'),
+    ),
+  );
 }
 
 /**
- * Load coordinates.
+ * Implements hook_field_widget_form().
  */
-function image_annotator_load_coordinates($fieldname, $entity_id, $conditions = array()) {
-  if (!isset($conditions['entity_type'])) {
-    $conditions['entity_type'] = 'node';
-  }
-  $query = db_select('image_annotator_coordinates', 'iac')
-      ->fields('iac')
-      ->condition('field', $fieldname)
-      ->condition('entity_id', $entity_id);
-  foreach ($conditions as $field => $val) {
-    $query->condition($field, $val);
-  }
-  return $query->execute()->fetchAllAssoc('iacid');
+function image_annotator_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $settings = $instance['settings'];
+  $element['value'] = array(
+    '#type' => 'hidden',
+    '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : '',
+    '#attributes' => array(
+      'id' => $field['field_name'] . '__' . $langcode . '__' . $delta . '__coordinates',
+      'class' => array('image-annotator-pointers'),
+    )
+  );
+  $element['image_annotator_button'] = array(
+    '#type' => 'button',
+    '#value' => t('Place on image'),
+    '#attributes' => array(
+      'class' => array('image-annotator-button'),
+      'rel' => 'edit-' . drupal_clean_css_identifier($settings['image_field']),
+      'id' => $field['field_name'] . '__' . $langcode . '__' . $delta . '__button',
+    ),
+  );
+  drupal_add_js(drupal_get_path('module', 'image_annotator') . '/image_annotator.js');
+  drupal_add_css(drupal_get_path('module', 'image_annotator') . '/image_annotator.css');
+  return $element;
 }
 
-/**
- * Stringify coordinates.
- */
-function image_annotator_stringify_coordinates($coordinates) {
-  return empty($coordinates) ? '' : implode(',', array_map('drupal_json_encode', $coordinates));
+function image_annotator_is_image_field($field) {
+  return $field['type'] == 'image';
 }

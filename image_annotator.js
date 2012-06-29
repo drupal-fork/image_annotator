@@ -67,8 +67,8 @@
             targetImage: $(target),
             pointer_label: $pointer_label
           };
-          if (typeof self.pointers[pointer.field.fieldname + '_' + data.iacid] === 'undefined') {
-            self.pointers[pointer.field.fieldname + '_' + data.iacid] = pointer;
+          if (typeof self.pointers[pointer.field.fieldname + '_' + data.x + '_' + data.y] === 'undefined') {
+            self.pointers[pointer.field.fieldname + '_' + data.x + '_' + data.y] = pointer;
             self.numberOfPointers++;
           }
 
