@@ -1,27 +1,31 @@
 (function ($){
   Drupal.behaviors.imageAnnotator = {
     attach: function (context) {
-      if (typeof Drupal.imageAnnotators === 'undefined') {
-        Drupal.imageAnnotators = {};
-      }
-      $.each(Drupal.settings.imageAnnotator, function (coordfield, imagefield) {
-        if (typeof Drupal.imageAnnotators[coordfield] === 'undefined') {
-          Drupal.imageAnnotators[coordfield] = new Drupal.imageAnnotator();
-        }
-
-        if ($('#' + imagefield + ' .image-preview img').length) {
-          Drupal.imageAnnotators[coordfield].toggleButton($('.image-annotator-button'), true);
+      if ($(context).is('form') || typeof Drupal.imageAnnotators === 'undefined') {
+        if (typeof Drupal.imageAnnotators === 'undefined') {
+          Drupal.imageAnnotators = {};
         }
         else {
-          Drupal.imageAnnotators[coordfield].toggleButton($('.image-annotator-button'), false);
+          $(context).find('.image-annotator-pointer').remove();
+          $(context).find('image-annotator-pointer-label').remove();
         }
+        $.each(Drupal.settings.imageAnnotator, function (coordfield, imagefield) {
+          Drupal.imageAnnotators[coordfield] = new Drupal.imageAnnotator();
 
-        Drupal.imageAnnotators[coordfield].bindButtons(context);
-        Drupal.imageAnnotators[coordfield].bindImages(context);
-        Drupal.imageAnnotators[coordfield].readPointers(context);
-        Drupal.imageAnnotators[coordfield].drawPointers();
-      });
-      
+          if ($('#' + imagefield + ' .image-preview img').length) {
+            Drupal.imageAnnotators[coordfield].toggleButton($('.image-annotator-button'), true);
+          }
+          else {
+            Drupal.imageAnnotators[coordfield].toggleButton($('.image-annotator-button'), false);
+          }
+
+          Drupal.imageAnnotators[coordfield].bindButtons(context);
+          Drupal.imageAnnotators[coordfield].bindImages(context);
+          Drupal.imageAnnotators[coordfield].readPointers(context);
+          Drupal.imageAnnotators[coordfield].drawPointers();
+        });
+
+      }
     }
   };
 
@@ -84,34 +88,28 @@
 
   Drupal.imageAnnotator.prototype.bindButtons = function(context) {
     var self = this;
-    $(context).find('.image-annotator-button').once('image-annotator-bind', function () {
-      var $button = $(this);
-      // bind the click event to the button
-      $button.click(function(event) {
-        var element = $(this).attr('id').split('__');
-        self.placing = true;
-        self.placingElement = {
-          fieldname: element[0],
-          lang: element[1],
-          delta: element[2]
-        };
-        var $imageTarget = $('#' + $(this).attr('rel') + ' .image-preview img');
-        $imageTarget.addClass('image-annotator-current-target');
-        self.targetImage = $imageTarget;
-        self.toggleButton($(this), false);
-        event.preventDefault();
-      });
+    $(context).find('.image-annotator-button').click(function(event) {
+      var element = $(this).attr('id').split('__');
+      self.placing = true;
+      self.placingElement = {
+        fieldname: element[0],
+        lang: element[1],
+        delta: element[2]
+      };
+      var $imageTarget = $('#' + $(this).attr('rel') + ' .image-preview img');
+      $imageTarget.addClass('image-annotator-current-target');
+      self.targetImage = $imageTarget;
+      self.toggleButton($(this), false);
+      event.preventDefault();
     });
   }
 
   Drupal.imageAnnotator.prototype.bindImages = function(context) {
     var self = this;
-    $('html').once('bindclick', function() {
-      $(this).click(function (event){
-        if (self.placing) {
-          self.addPointer(event);
-        }
-      });
+    $('html').click(function (event){
+      if (self.placing) {
+        self.addPointer(event);
+      }
     });
   }
 
