@@ -9,10 +9,10 @@
           $(context).find('.image-annotator-pointer').remove();
           $(context).find('image-annotator-pointer-label').remove();
         }
-        $.each(Drupal.settings.imageAnnotator, function (coordfield, imagefield) {
-          Drupal.imageAnnotators[coordfield] = new Drupal.imageAnnotator();
+        $.each(Drupal.settings.imageAnnotator, function (coordfield, settings) {
+          Drupal.imageAnnotators[coordfield] = new Drupal.imageAnnotator(settings);
 
-          if ($('#' + imagefield + ' .image-preview img').length) {
+          if ($('#' + Drupal.imageAnnotators[coordfield].imagefield + ' .image-preview img').length) {
             Drupal.imageAnnotators[coordfield].toggleButton($('.image-annotator-button'), true);
           }
           else {
@@ -29,12 +29,14 @@
     }
   };
 
-  Drupal.imageAnnotator = function () {
+  Drupal.imageAnnotator = function (settings) {
     this.placing = false;
     this.placingElement = false;
     this.targetImage = false;
     this.pointers = {};
     this.numberOfPointers = 0;
+    this.imagefield = settings.rel;
+    this.edit = settings.edit;
   }
 
   // Helper function to toggle buttons
@@ -65,8 +67,10 @@
           $pointer_label.addClass('image-annotator-pointer-label');
           var x = parseInt(data.x, 10) + target.offsetLeft;
           var y = parseInt(data.y, 10) + target.offsetTop;
-          $pointer_label.append('(<a href="#" rel="' + data.field + '_' + x + '_' + y + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
-          self.bindRemove($pointer_label);
+          if (self.edit) {
+            $pointer_label.append('(<a href="#" rel="' + data.field + '_' + x + '_' + y + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
+            self.bindRemove($pointer_label);
+          }
           var pointer = {
             pointer: $pointer,
             x: x,
@@ -131,8 +135,10 @@
 
       $pointer.addClass('image-annotator-pointer');
       $pointer_label.addClass('image-annotator-pointer-label');
-      $pointer_label.append('(<a href="#" rel="' + self.placingElement.fieldname + '_' + x + '_' + y + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
-      self.bindRemove($pointer_label);
+      if (self.edit) {
+        $pointer_label.append('(<a href="#" rel="' + self.placingElement.fieldname + '_' + x + '_' + y + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
+        self.bindRemove($pointer_label);
+      }
       var pointer = {
         pointer: $pointer,
         x: x,
@@ -229,13 +235,15 @@
 
   Drupal.imageAnnotator.prototype.bindRemove = function ($pointer_label) {
     var self = this;
-    $pointer_label.find('a.image-annotator-remove').click(function (event) {
-      //self.removePointer(self.pointers[$(this).attr('rel')]));
-      var key = $(this).attr('rel')
-      if (typeof self.pointers[key] !== 'undefined') {
-        self.removePointer(self.pointers[key]);
-      }
-      event.preventDefault();
-    });
+    if (self.edit) {
+      $pointer_label.find('a.image-annotator-remove').click(function (event) {
+        //self.removePointer(self.pointers[$(this).attr('rel')]));
+        var key = $(this).attr('rel')
+        if (typeof self.pointers[key] !== 'undefined') {
+          self.removePointer(self.pointers[key]);
+        }
+        event.preventDefault();
+      });
+    }
   }
 })(jQuery);
