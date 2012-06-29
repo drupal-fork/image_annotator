@@ -1,22 +1,27 @@
 (function ($){
   Drupal.behaviors.imageAnnotator = {
     attach: function (context) {
+      if (typeof Drupal.imageAnnotators === 'undefined') {
+        Drupal.imageAnnotators = {};
+      }
+      $.each(Drupal.settings.imageAnnotator, function (coordfield, imagefield) {
+        if (typeof Drupal.imageAnnotators[coordfield] === 'undefined') {
+          Drupal.imageAnnotators[coordfield] = new Drupal.imageAnnotator();
+        }
+
+        if ($('#' + imagefield + ' .image-preview img').length) {
+          Drupal.imageAnnotators[coordfield].toggleButton($('.image-annotator-button'), true);
+        }
+        else {
+          Drupal.imageAnnotators[coordfield].toggleButton($('.image-annotator-button'), false);
+        }
+
+        Drupal.imageAnnotators[coordfield].bindButtons(context);
+        Drupal.imageAnnotators[coordfield].bindImages(context);
+        Drupal.imageAnnotators[coordfield].readPointers(context);
+        Drupal.imageAnnotators[coordfield].drawPointers();
+      });
       
-      if (typeof Drupal.myImageAnnotator === 'undefined') {
-        Drupal.myImageAnnotator = new Drupal.imageAnnotator();
-      }
-
-      if ($('#edit-field-floorplan .image-preview img').length) {
-        Drupal.myImageAnnotator.toggleButton($('.image-annotator-button'), true);
-      }
-      else {
-        Drupal.myImageAnnotator.toggleButton($('.image-annotator-button'), false);
-      }
-
-      Drupal.myImageAnnotator.bindButtons(context);
-      Drupal.myImageAnnotator.bindImages(context);
-      Drupal.myImageAnnotator.readPointers(context);
-      Drupal.myImageAnnotator.drawPointers();
     }
   };
 
@@ -135,7 +140,7 @@
         pointer_label: $pointer_label
       };
 
-      self.pointers[pointer.field.fieldname + '_' + pointer.number] = pointer;
+      self.pointers[pointer.field.fieldname + '_' + pointer.x + '_' + pointer.y] = pointer;
       self.drawPointer(pointer);
       
 

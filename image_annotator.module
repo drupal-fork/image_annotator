@@ -43,9 +43,10 @@ function image_annotator_field_formatter_info() {
  * Implements hook_field_formatter_view()
  */
 function image_annotator_field_formatter_view ($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  // support field collections
+  static $number = 0;
   $settings = $instance['settings'];
   $element = array();
-
   foreach ($items as $delta => $item) {
     $text = '';
 
@@ -60,16 +61,22 @@ function image_annotator_field_formatter_view ($entity_type, $entity, $field, $i
         'class' => array('image-annotator-pointers'),
       )
     );
+    $rel = 'field-name-' . drupal_clean_css_identifier($settings['image_field']);
     $element[$delta]['image_annotator_button'] = array(
       '#type' => 'hidden',
       '#value' => '',
       '#attributes' => array(
         'class' => array('image-annotator-button'),
-        'rel' => 'field-name-' . drupal_clean_css_identifier($settings['image_field']),
-        'id' => $field['field_name'] . '__' . $langcode . '__' . $delta . '__button',
+        'rel' => $rel,
+        'id' => $field['field_name'] . '__' . $langcode . '__' . $number . '__button',
       ),
     );
   }
+  $number++;
+  $js_settings = array(
+    'imageAnnotator' => array($field['field_name'] => $rel),
+  );
+  drupal_add_js($js_settings, 'setting');
   drupal_add_js(drupal_get_path('module', 'image_annotator') . '/image_annotator.js');
   drupal_add_css(drupal_get_path('module', 'image_annotator') . '/image_annotator.css');
   return $element;
@@ -109,26 +116,36 @@ function image_annotator_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function image_annotator_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  // support field collections
+  static $number = 0;
   $settings = $instance['settings'];
   $element['value'] = array(
     '#type' => 'hidden',
     '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : '',
     '#attributes' => array(
-      'id' => $field['field_name'] . '__' . $langcode . '__' . $delta . '__coordinates',
+      'id' => $field['field_name'] . '__' . $langcode . '__' . $number . '__coordinates',
       'class' => array('image-annotator-pointers'),
     )
   );
+  $rel = 'edit-' . drupal_clean_css_identifier($settings['image_field']);
   $element['image_annotator_button'] = array(
     '#type' => 'button',
     '#value' => t('Place on image'),
     '#attributes' => array(
       'class' => array('image-annotator-button'),
-      'rel' => 'edit-' . drupal_clean_css_identifier($settings['image_field']),
-      'id' => $field['field_name'] . '__' . $langcode . '__' . $delta . '__button',
+      'rel' => $rel,
+      'id' => $field['field_name'] . '__' . $langcode . '__' . $number . '__button',
     ),
   );
+  $js_settings = array(
+    'imageAnnotator' => array($field['field_name'] => $rel),
+  );
+  drupal_add_js($js_settings, 'setting');
   drupal_add_js(drupal_get_path('module', 'image_annotator') . '/image_annotator.js');
   drupal_add_css(drupal_get_path('module', 'image_annotator') . '/image_annotator.css');
+  if ($delta == 0) {
+    $number++;
+  }
   return $element;
 }
 
