@@ -59,14 +59,18 @@
             target = $('.' + image + '.field-type-image img').get(0);
           }
           var number = self.numberOfPointers + 1;
-          var $pointer = $('<span>' + number + '</span>');
+          var $pointer = $('<span><span>' + number + '</span></span>');
           var $pointer_label = $pointer.clone();
           $pointer.addClass('image-annotator-pointer');
           $pointer_label.addClass('image-annotator-pointer-label');
+          var x = parseInt(data.x, 10) + target.offsetLeft;
+          var y = parseInt(data.y, 10) + target.offsetTop;
+          $pointer_label.append('(<a href="#" rel="' + data.field + '_' + x + '_' + y + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
+          self.bindRemove($pointer_label);
           var pointer = {
             pointer: $pointer,
-            x: parseInt(data.x, 10) + target.offsetLeft - $pointer.height()/2,
-            y: parseInt(data.y, 10) + target.offsetTop - $pointer.width()/2,
+            x: x,
+            y: y,
             field: {
               fieldname: data.field,
               lang: data.language,
@@ -76,8 +80,8 @@
             targetImage: $(target),
             pointer_label: $pointer_label
           };
-          if (typeof self.pointers[pointer.field.fieldname + '_' + data.x + '_' + data.y] === 'undefined') {
-            self.pointers[pointer.field.fieldname + '_' + data.x + '_' + data.y] = pointer;
+          if (typeof self.pointers[pointer.field.fieldname + '_' + x + '_' + y] === 'undefined') {
+            self.pointers[pointer.field.fieldname + '_' + x + '_' + y] = pointer;
             self.numberOfPointers++;
           }
 
@@ -118,16 +122,17 @@
     var $target = $(event.target);
     if ($target.hasClass('image-annotator-current-target')) {
       var number = ++self.numberOfPointers;
-      var $pointer = $('<span>' + number + '</span>')
+      var $pointer = $('<span><span>' + number + '</span></span>')
       var $pointer_label = $pointer.clone();
-      var x = (event.layerX) - $pointer.height()/2;
-      var y = (event.layerY) - $pointer.width()/2;
-      var relativex = x - event.target.offsetLeft + $pointer.height()/2;
-      var relativey = y - event.target.offsetTop + $pointer.width()/2;
+      var x = (event.layerX);
+      var y = (event.layerY);
+      var relativex = x - event.target.offsetLeft;
+      var relativey = y - event.target.offsetTop;
 
       $pointer.addClass('image-annotator-pointer');
       $pointer_label.addClass('image-annotator-pointer-label');
-
+      $pointer_label.append('(<a href="#" rel="' + self.placingElement.fieldname + '_' + x + '_' + y + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
+      self.bindRemove($pointer_label);
       var pointer = {
         pointer: $pointer,
         x: x,
@@ -167,18 +172,51 @@
     }
   }
 
+  Drupal.imageAnnotator.prototype.removePointer = function (pointer) {
+    var self = this;
+    pointer.pointer.remove();
+    pointer.pointer_label.remove();
+    var id = '#' + pointer.field.fieldname + '__' + pointer.field.lang + '__' + pointer.field.delta
+    var curval = $(id + '__coordinates').val();
+    var pointers = JSON.parse('[' + curval + ']');
+    var target = pointer.targetImage.get(0);
+    pointers = $.grep(pointers, function (check_pointer, i) {
+      var x = parseInt(check_pointer.x, 10) + target.offsetLeft;
+      var y = parseInt(check_pointer.y, 10) + target.offsetTop;
+      return !(
+        pointer.x == x
+        && pointer.y == y
+        && pointer.field.fieldname == check_pointer.field
+        && pointer.field.lang == check_pointer.language
+        && pointer.field.delta == check_pointer.delta
+      );
+    });
+    curval = '';
+    if (pointers.length) {
+      $.each(pointers, function(index, value) {
+        if (curval.length) {
+          curval += ',';
+        }
+        curval += JSON.stringify(value)
+      });
+    }
+    $(id + '__coordinates').val(curval);
+    delete self.pointers[pointer.field.fieldname + '_' + pointer.x + '_' + pointer.y];
+
+  }
+
   Drupal.imageAnnotator.prototype.drawPointer = function(pointer) {
     var $pointer = pointer.pointer;
     var $pointer_label = pointer.pointer_label;
-    var id = '#' + pointer.field.fieldname + '__' + pointer.field.lang + '__' + pointer.field.delta
+    var id = '#' + pointer.field.fieldname + '__' + pointer.field.lang + '__' + pointer.field.delta;
+    $pointer.insertAfter(pointer.targetImage);
     $pointer.css(
       {
-        left: pointer.x,
-        top: pointer.y,
+        left: pointer.x - ($pointer.width()/2),
+        top: pointer.y - ($pointer.height()/2),
         position: 'absolute'
       }
     );
-    $pointer.insertAfter(pointer.targetImage);
     $pointer_label.insertAfter(id + '__button');
   }
 
@@ -186,6 +224,18 @@
     var self = this;
     $.each(self.pointers, function (index, pointer) {
       self.drawPointer(pointer);
+    });
+  }
+
+  Drupal.imageAnnotator.prototype.bindRemove = function ($pointer_label) {
+    var self = this;
+    $pointer_label.find('a.image-annotator-remove').click(function (event) {
+      //self.removePointer(self.pointers[$(this).attr('rel')]));
+      var key = $(this).attr('rel')
+      if (typeof self.pointers[key] !== 'undefined') {
+        self.removePointer(self.pointers[key]);
+      }
+      event.preventDefault();
     });
   }
 })(jQuery);
