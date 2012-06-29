@@ -3,4 +3,3 @@ description = Allows you to link values from a field collection to an image.
 package = Effects
 core = 7.x
 dependencies[] = image
-dependencies[] = field_collection
