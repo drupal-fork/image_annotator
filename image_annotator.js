@@ -11,14 +11,6 @@
         }
         $.each(Drupal.settings.imageAnnotator, function (coordfield, settings) {
           Drupal.imageAnnotators[coordfield] = new Drupal.imageAnnotator(settings);
-
-          if ($('#' + Drupal.imageAnnotators[coordfield].imagefield + ' .image-preview img').length) {
-            Drupal.imageAnnotators[coordfield].toggleButton($('.image-annotator-button'), true);
-          }
-          else {
-            Drupal.imageAnnotators[coordfield].toggleButton($('.image-annotator-button'), false);
-          }
-
           Drupal.imageAnnotators[coordfield].bindButtons(context);
           Drupal.imageAnnotators[coordfield].bindImages(context);
           Drupal.imageAnnotators[coordfield].readPointers(context);
@@ -30,13 +22,22 @@
   };
 
   Drupal.imageAnnotator = function (settings) {
-    this.placing = false;
-    this.placingElement = false;
-    this.targetImage = false;
-    this.pointers = {};
-    this.numberOfPointers = 0;
-    this.imagefield = settings.rel;
-    this.edit = settings.edit;
+    var self = this;
+    self.placing = false;
+    self.placingElement = false;
+    self.targetImage = false;
+    self.pointers = {};
+    self.numberOfPointers = 0;
+    self.imagefield = settings.imagefield;
+    self.edit = settings.edit;
+    if ($('#' + self.imagefield + ' .image-preview img').length) {
+      self.toggleButton($('.image-annotator-button'), true);
+    }
+    else {
+      self.toggleButton($('.image-annotator-button'), false);
+    }
+    $('#' + self.imagefield + ' .image-preview').css({position: 'relative'});
+    $('.' + self.imagefield + '.field-type-image').css({position: 'relative'})
   }
 
   // Helper function to toggle buttons
@@ -141,8 +142,8 @@
       }
       var pointer = {
         pointer: $pointer,
-        x: x,
-        y: y,
+        x: relativex,
+        y: relativey,
         field: self.placingElement,
         number: number,
         targetImage: $target,
