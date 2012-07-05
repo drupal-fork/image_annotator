@@ -30,14 +30,15 @@
     self.numberOfPointers = 0;
     self.imagefield = settings.imagefield;
     self.edit = settings.edit;
-    if ($('#' + self.imagefield + ' .image-preview img').length) {
+    if ($('#' + self.imagefield + ' img').length) {
       self.toggleButton($('.image-annotator-button'), true);
     }
     else {
       self.toggleButton($('.image-annotator-button'), false);
     }
-    $('#' + self.imagefield + ' .image-preview').css({position: 'relative'});
-    $('.' + self.imagefield + '.field-type-image').css({position: 'relative'})
+    $('#' + self.imagefield + ' img').first().parent().css({position: 'relative'});
+    //$('#' + self.imagefield + ' .image-preview').css({position: 'relative'});
+    //$('.' + self.imagefield + '.field-type-image').css({position: 'relative'})
   }
 
   // Helper function to toggle buttons
@@ -60,6 +61,12 @@
           var target = $('#' + image + ' .image-preview img').get(0);
           if (typeof target === 'undefined') {
             target = $('.' + image + '.field-type-image img').get(0);
+          }
+          if (typeof target === 'undefined') {
+            target = $('#' + image + ' img').get(0);
+          }
+          if (typeof target === 'undefined') {
+            target = $('.' + image + ' img').get(0);
           }
           var number = self.numberOfPointers + 1;
           var $pointer = $('<span><span>' + number + '</span></span>');
@@ -105,7 +112,7 @@
         lang: element[1],
         delta: element[2]
       };
-      var $imageTarget = $('#' + $(this).attr('rel') + ' .image-preview img');
+      var $imageTarget = $('#' + $(this).attr('rel') + ' img').first();
       $imageTarget.addClass('image-annotator-current-target');
       self.targetImage = $imageTarget;
       self.toggleButton($(this), false);
@@ -125,6 +132,7 @@
   Drupal.imageAnnotator.prototype.addPointer = function (event) {
     var self = this;
     var $target = $(event.target);
+    var id = '#' + self.placingElement.fieldname + '__' + self.placingElement.lang + '__' + self.placingElement.delta
     if ($target.hasClass('image-annotator-current-target')) {
       var number = ++self.numberOfPointers;
       var $pointer = $('<span><span>' + number + '</span></span>')
@@ -154,7 +162,6 @@
       self.drawPointer(pointer);
       
 
-      var id = '#' + self.placingElement.fieldname + '__' + self.placingElement.lang + '__' + self.placingElement.delta
       var curval = $(id + '__coordinates').val();
       if (curval.length) {
         curval += ',';
@@ -171,6 +178,9 @@
         }
       );
       $(id + '__coordinates').val(curval);
+      self.toggleButton($(id + '__button'), true);
+    }
+    else {
       self.toggleButton($(id + '__button'), true);
     }
     if (!$target.hasClass('image-annotator-button')) {

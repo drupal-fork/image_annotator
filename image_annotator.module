@@ -98,6 +98,7 @@ function image_annotator_field_formatter_view ($entity_type, $entity, $field, $i
 function image_annotator_field_instance_settings_form($field, $instance) {
   $settings = $instance['settings'];
   $fields = field_info_fields();
+  dpm($fields);
   $options = drupal_map_assoc(array_keys(array_filter($fields, 'image_annotator_is_image_field')));
   $form['image_field'] = array(
     '#type' => 'select',
@@ -184,5 +185,5 @@ function image_annotator_field_widget_form(&$form, &$form_state, $field, $instan
 }
 
 function image_annotator_is_image_field($field) {
-  return $field['type'] == 'image';
+  return ($field['type'] == 'image') || ($field['type'] == 'fixed_field');
 }
