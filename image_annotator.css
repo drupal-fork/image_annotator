@@ -1,10 +1,22 @@
-span.image-annotator-pointer span, span.image-annotator-pointer-label span {
+span.image-annotator-pointer span, span.image-annotator-rectangle span, span.image-annotator-pointer-label span {
   background-color: #0074BD;
   color: white;
   padding: 0 2px;
 }
-span.image-annotator-pointer-label {
+span.image-annotator-pointer-label{
   display: block;
+}
+
+span.image-annotator-rectangle{
+  background-color: #0074BD;
+  color: white;
+  opacity:0.4;
+  filter:alpha(opacity=40); /* For IE8 and earlier */
+}
+
+span.image-annotator-rectangle span {
+  opacity:1;
+  filter:alpha(opacity=100); /* For IE8 and earlier */
 }
 
 span.image-annotator-pointer-label span {

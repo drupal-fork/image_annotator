@@ -98,7 +98,6 @@ function image_annotator_field_formatter_view ($entity_type, $entity, $field, $i
 function image_annotator_field_instance_settings_form($field, $instance) {
   $settings = $instance['settings'];
   $fields = field_info_fields();
-  dpm($fields);
   $options = drupal_map_assoc(array_keys(array_filter($fields, 'image_annotator_is_image_field')));
   $form['image_field'] = array(
     '#type' => 'select',
@@ -135,9 +134,13 @@ function image_annotator_form_field_ui_field_edit_form_alter(&$form) {
 function image_annotator_field_widget_info() {
   return array(
     'image_annotator_hidden' => array(
-      'label' => t('Image Annotator'),
+      'label' => t('Image Annotator Pointer'),
       'field types' => array('image_annotator'),
     ),
+    'image_annotator_rectangle' => array(
+      'label' => t('Image Annotator Rectangle'),
+      'field types' => array('image_annotator'),
+    )
   );
 }
 
@@ -146,7 +149,14 @@ function image_annotator_field_widget_info() {
  */
 function image_annotator_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   // support field collections
-  
+  //$instance['widget']['type']
+  $class = '';
+  if ($instance['widget']['type'] == 'image_annotator_hidden') {
+    $class = 'image-annotator-pointer';
+  }
+  elseif ($instance['widget']['type'] == 'image_annotator_rectangle') {
+    $class = 'image-annotator-rectangle';
+  }
   static $highest_delta = -1;
   //figure out if this field is part of a collection, if so, figure out which delta it has.
   $settings = $instance['settings'];
@@ -168,7 +178,7 @@ function image_annotator_field_widget_form(&$form, &$form_state, $field, $instan
     '#type' => 'button',
     '#value' => t('Place on image'),
     '#attributes' => array(
-      'class' => array('image-annotator-button'),
+      'class' => array('image-annotator-button', $class),
       'rel' => $rel,
       'id' => $field['field_name'] . '__' . $langcode . '__' . $number . '__button',
     ),
