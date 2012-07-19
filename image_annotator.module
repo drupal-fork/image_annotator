@@ -61,8 +61,7 @@ function image_annotator_field_formatter_view ($entity_type, $entity, $field, $i
       if (isset($item['value'])) {
         $text = $item['value'];
       }
-      $element['value'] = array('#type' => 'container', '#attributes' => array('class' => array('test')));
-      $element[$delta]['value']['image_annotator_coordinates'] = array(
+      $element[$delta]['image_annotator_coordinates'] = array(
         '#type' => 'hidden',
         '#value' => $text,
         '#attributes' => array(
@@ -71,7 +70,7 @@ function image_annotator_field_formatter_view ($entity_type, $entity, $field, $i
         )
       );
       $rel = 'field-name-' . drupal_clean_css_identifier($settings['image_field']);
-      $element[$delta]['value']['image_annotator_button'] = array(
+      $element[$delta]['image_annotator_button'] = array(
         '#type' => 'hidden',
         '#value' => '',
         '#attributes' => array(
