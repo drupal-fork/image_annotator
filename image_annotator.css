@@ -3,6 +3,10 @@ span.image-annotator-pointer span, span.image-annotator-rectangle span, span.ima
   color: white;
   padding: 0 2px;
 }
+
+span.image-annotator-rectangle.ui-draggable {
+  cursor: move;
+}
 span.image-annotator-pointer-label{
   display: block;
 }

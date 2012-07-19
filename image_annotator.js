@@ -36,6 +36,8 @@
     self.rectangleY = undefined;
     self.rectangleWidth = 20;
     self.rectangleHeight = 20;
+    self.draggable = settings.draggable;
+    self.resizable = settings.resizable;
     if ($('#' + self.imagefield + ' img').length) {
       self.toggleButton($('.image-annotator-button'), true);
     }
@@ -53,7 +55,9 @@
       $imageField = $('.' + self.imagefield + ' img');
     }
     $imageField.first().parent().css({position: 'relative'});
-  }
+    self.targetWidth = 1;
+    self.targetHeight = 1;
+  };
 
   // Helper function to toggle buttons
   Drupal.imageAnnotator.prototype.toggleButton = function(button, enable) {
@@ -63,7 +67,7 @@
     else {
       button.removeAttr('disabled').removeClass('form-button-disabled');
     }
-  }
+  };
 
   Drupal.imageAnnotator.prototype.readPointers = function(context) {
     var self = this;
@@ -92,12 +96,18 @@
           var type = (typeof data.type == 'undefined') ? 'pointer' : data.type;
           $pointer.addClass('image-annotator-' + type);
           $pointer_label.addClass('image-annotator-pointer-label');
-          var x = parseInt(data.x, 10) + target.offsetLeft;
-          var y = parseInt(data.y, 10) + target.offsetTop;
+          var x = Math.round((parseFloat(data.x, 10) + target.offsetLeft) * self.targetWidth);
+          var y = Math.round((parseFloat(data.y, 10) + target.offsetTop) * self.targetHeight);
+          var width = (typeof data.width == 'undefined') ? 20 : data.width;
+          var height = (typeof data.height == 'undefined') ? 20 : data.height
+          width = Math.round(parseFloat(width, 10) * self.targetWidth);
+          height = Math.round(parseFloat(height, 10) * self.targetHeight);
+          var dataId = (typeof data.id != 'undefined') ? data.id : number;
           if (self.edit) {
-            $pointer_label.append('(<a href="#" rel="' + data.field + '_' + x + '_' + y + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
+            $pointer_label.append('(<a href="#" rel="' + data.field + '_' + data.language + '_' + data.delta + '_' + dataId + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
             self.bindRemove($pointer_label);
           }
+          $pointer.attr('id', data.field + '__' + data.language + '__' + data.delta + '__' + dataId + '__pointer');
           var pointer = {
             pointer: $pointer,
             x: x,
@@ -108,21 +118,22 @@
               delta: data.delta
             },
             number: number,
+            id: dataId,
             targetImage: $targetImage,
             pointer_label: $pointer_label,
-            width: (typeof data.width == 'undefined') ? 20 : data.width,
-            height: (typeof data.height == 'undefined') ? 20 : data.height,
+            width: width,
+            height: height,
             type: type
           };
-          if (typeof self.pointers[pointer.field.fieldname + '_' + x + '_' + y] === 'undefined') {
-            self.pointers[pointer.field.fieldname + '_' + x + '_' + y] = pointer;
+          if (typeof self.pointers[pointer.field.fieldname + '_' + pointer.field.lang + '_' + pointer.field.delta + '_' + pointer.id] === 'undefined') {
+            self.pointers[pointer.field.fieldname + '_' + pointer.field.lang + '_' + pointer.field.delta + '_' + pointer.id] = pointer;
             self.numberOfPointers++;
           }
 
         }
       });
     });
-  }
+  };
 
   Drupal.imageAnnotator.prototype.bindButtons = function(context) {
     var self = this;
@@ -146,8 +157,11 @@
           height: $imageTarget.height(),
           position: 'absolute',
           top: 0,
-          left: 0
+          left: 0,
+          overflow: 'hidden'
         });
+        self.targetWidth = $imageTarget.width();
+        self.targetHeight = $imageTarget.height();
         $targetdiv.addClass('image-annotator-target');
         $imageTarget.after($targetdiv);
       }
@@ -156,10 +170,10 @@
       var $button = $(this);
       var element = $button.attr('id').split('__');
       var type;
-      if ($button.hasClass('image-annotator-pointer')) {
+      if ($button.hasClass('image-annotator-hidden') || $button.hasClass('image-annotator-pointer-draggable')) {
         type = 'pointer';
       }
-      else if ($button.hasClass('image-annotator-rectangle')) {
+      else if ($button.hasClass('image-annotator-rectangle') || $button.hasClass('image-annotator-rectangle-draggable')) {
         type = 'rectangle';
       }
       self.placing = true;
@@ -171,16 +185,28 @@
       };
       var $imageTarget = $('#' + $(this).attr('rel') + '-target').first();
       $imageTarget.addClass('image-annotator-current-target');
-      self.targetImage = $imageTarget;
+      if (self.draggable) {
+        var target = $imageTarget.get(0);
+        var x = self.rectangleX = target.offsetLeft + $imageTarget.width()/2;
+        var y = self.rectangleY = target.offsetTop + $imageTarget.height()/2;
+        var options = {
+          target: target,
+          x: x,
+          y: y
+        }
+        self.targetImage = $imageTarget;
+        var pointer = self.addPointer(options);
+        self.savePointer(pointer);
+      }
       self.toggleButton($button, false);
       event.preventDefault();
     });
-  }
+  };
 
   Drupal.imageAnnotator.prototype.bindImages = function(context) {
     var self = this;
     $('html').click(function (event){
-      if (self.placing && (typeof self.placingElement.type == 'undefined' || self.placingElement.type == 'pointer')) {
+      if (self.placing && (typeof self.placingElement.type == 'undefined' || self.placingElement.type == 'pointer') && !$(event.target).hasClass('image-annotator-button')) {
         self.addPointer(event);
       }
     });
@@ -194,6 +220,7 @@
           self.rectangleHeight = 20;
           self.drawingRectangle = true;
           var pointer = self.addPointer(event);
+          self.rectanglePointer = pointer;
           var $pointer = pointer.pointer;
           //event.preventDefault();
           var $target = $(event.target);
@@ -204,21 +231,21 @@
 
               if (x < self.rectangleX) {
                 self.rectangleX = x;
-                pointer.x = x;
+                self.rectanglePointer.x = x;
               }
               if (y < self.rectangleY) {
                 self.rectangleY = y;
-                pointer.y = y;
+                self.rectanglePointer.y = y;
               }
               self.rectangleWidth = Math.max(20, Math.abs(x - self.rectangleX));
               self.rectangleHeight = Math.max(20, Math.abs(y - self.rectangleY));
-              pointer.width = self.rectangleWidth;
-              pointer.height = self.rectangleHeight;
+              self.rectanglePointer.width = self.rectangleWidth;
+              self.rectanglePointer.height = self.rectangleHeight;
               $pointer.css({
-                width: pointer.width + 'px',
-                height: pointer.height + 'px',
-                top: pointer.y,
-                left: pointer.x
+                width: self.rectanglePointer.width + 'px',
+                height: self.rectanglePointer.height + 'px',
+                top: self.rectanglePointer.y,
+                left: self.rectanglePointer.x
               })
               
               //event.preventDefault();
@@ -227,15 +254,18 @@
           $target.mouseup(function (event) {
             if (self.drawingRectangle) {
               self.drawingRectangle = false;
+              self.rectanglePointer.number = self.numberOfPointers;
+              self.rectanglePointer.id = self.numberOfPointers;
               delete self.rectangleTarget;
-              self.savePointer(pointer);
+              self.savePointer(self.rectanglePointer);
+              delete self.rectanglePointer;
               $(event.target).unbind('mousemove');
             }
           });
         }
       }
     });
-  }
+  };
 
   Drupal.imageAnnotator.prototype.addPointer = function (event) {
     var self = this;
@@ -247,8 +277,10 @@
       var number = ++self.numberOfPointers;
       var $pointer = $('<span><span>' + number + '</span></span>');
       var $pointer_label = $pointer.clone();
-      var x = event.target.offsetLeft;
-      var y = event.target.offsetTop;
+      //var x = event.target.offsetLeft;
+      //var y = event.target.offsetTop;
+      var x = event.x;
+      var y = event.y;
       var width = 0;
       var height = 0;
       if (type == 'pointer') {
@@ -267,15 +299,17 @@
       $pointer.addClass('image-annotator-' + type);
       $pointer_label.addClass('image-annotator-pointer-label');
       if (self.edit) {
-        $pointer_label.append('(<a href="#" rel="' + self.placingElement.fieldname + '_' + x + '_' + y + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
+        $pointer_label.append('(<a href="#" rel="' + self.placingElement.fieldname + '_' + self.placingElement.lang + '_' + self.placingElement.delta + '_' + number + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
         self.bindRemove($pointer_label);
       }
+      $pointer.attr('id', self.placingElement.fieldname + '__' + self.placingElement.lang + '__' + self.placingElement.delta + '__' + number + '__pointer');
       pointer = {
         pointer: $pointer,
         x: relativex,
         y: relativey,
         field: self.placingElement,
         number: number,
+        id: number,
         targetImage: $target,
         pointer_label: $pointer_label,
         width: width,
@@ -283,7 +317,7 @@
         type: type
       };
 
-      self.pointers[pointer.field.fieldname + '_' + pointer.x + '_' + pointer.y] = pointer;
+      self.pointers[pointer.field.fieldname + '_' + pointer.field.lang + '_' + pointer.field.delta + '_' + pointer.id] = pointer;
       self.drawPointer(pointer);
       if (pointer.type == 'pointer') {
         self.savePointer(pointer);
@@ -297,7 +331,7 @@
       $('.image-annotator-current-target').removeClass('image-annotator-current-target');
     }
     return pointer;
-  }
+  };
 
   Drupal.imageAnnotator.prototype.savePointer = function (pointer) {
     var self = this;
@@ -310,18 +344,28 @@
 
       curval += JSON.stringify(
         {
-          x:pointer.x,
-          y:pointer.y,
+          x:pointer.x / self.targetWidth,
+          y:pointer.y / self.targetHeight,
           field: pointer.field.fieldname,
           delta: pointer.field.delta,
           language: pointer.field.lang,
           type: pointer.type,
-          width: pointer.width,
-          height: pointer.height
+          width: pointer.width / self.targetWidth,
+          height: pointer.height / self.targetHeight,
+          id: (typeof pointer.id == 'undefined') ? pointer.number : pointer.id
         }
       );
       $(id + '__coordinates').val(curval);
       self.toggleButton($(id + '__button'), true);
+  };
+
+  Drupal.imageAnnotator.prototype.updatePointer = function (pointer) {
+    var self = this;
+    var id = '#' + pointer.field.fieldname + '__' + pointer.field.lang + '__' + pointer.field.delta;
+    $(id + '__coordinates').val('');
+    $.each(self.pointers, function(index, p) {
+      self.savePointer(p);
+    });
   }
 
   Drupal.imageAnnotator.prototype.removePointer = function (pointer) {
@@ -331,13 +375,12 @@
     var id = '#' + pointer.field.fieldname + '__' + pointer.field.lang + '__' + pointer.field.delta
     var curval = $(id + '__coordinates').val();
     var pointers = JSON.parse('[' + curval + ']');
-    var target = pointer.targetImage.get(0);
+    //var target = pointer.targetImage.get(0);
     pointers = $.grep(pointers, function (check_pointer, i) {
-      var x = parseInt(check_pointer.x, 10) + target.offsetLeft;
-      var y = parseInt(check_pointer.y, 10) + target.offsetTop;
+      //var x = parseInt(check_pointer.x, 10) + target.offsetLeft;
+      //var y = parseInt(check_pointer.y, 10) + target.offsetTop;
       return !(
-        pointer.x == x
-        && pointer.y == y
+        pointer.id == check_pointer.id
         && pointer.field.fieldname == check_pointer.field
         && pointer.field.lang == check_pointer.language
         && pointer.field.delta == check_pointer.delta
@@ -353,11 +396,11 @@
       });
     }
     $(id + '__coordinates').val(curval);
-    delete self.pointers[pointer.field.fieldname + '_' + pointer.x + '_' + pointer.y];
-
-  }
+    delete self.pointers[pointer.field.fieldname + '_' + pointer.field.lang + '_' + pointer.field.delta + '_' + pointer.id];
+  };
 
   Drupal.imageAnnotator.prototype.drawPointer = function(pointer) {
+    var self = this;
     var $pointer = pointer.pointer;
     var $pointer_label = pointer.pointer_label;
     var id = '#' + pointer.field.fieldname + '__' + pointer.field.lang + '__' + pointer.field.delta;
@@ -377,15 +420,27 @@
     //$pointer.insertAfter(pointer.targetImage);
     pointer.targetImage.append($pointer);
     $pointer.css(css);
+    if (self.draggable) {
+      $pointer.draggable({
+        stop: self.dragStop,
+        containment: "parent"
+      });
+    }
+    if (self.resizable) {
+      $pointer.resizable({
+        stop: self.resizeStop,
+        containment: "parent"
+      })
+    }
     $pointer_label.insertAfter(id + '__button');
-  }
+  };
 
   Drupal.imageAnnotator.prototype.drawPointers = function() {
     var self = this;
     $.each(self.pointers, function (index, pointer) {
       self.drawPointer(pointer);
     });
-  }
+  };
 
   Drupal.imageAnnotator.prototype.bindRemove = function ($pointer_label) {
     var self = this;
@@ -399,5 +454,38 @@
         event.preventDefault();
       });
     }
-  }
+  };
+
+  Drupal.imageAnnotator.prototype.dragStop = function (event, ui) {
+    var element = $(event.target).attr('id').split('__');
+    if (typeof Drupal.imageAnnotators[element[0]] == 'undefined') {
+      return;
+    }
+    var self = Drupal.imageAnnotators[element[0]];
+    var key = element[0] + '_' + element[1] + '_' + element[2] + '_' + element[3];
+    if (typeof self.pointers[key] == 'undefined') {
+      return;
+    }
+    var pointer = self.pointers[key];
+    pointer.x = ui.position.left;
+    pointer.y = ui.position.top;
+    self.updatePointer(pointer);
+  };
+
+  Drupal.imageAnnotator.prototype.resizeStop = function (event, ui) {
+    var element = $(event.target).attr('id').split('__');
+    if (typeof Drupal.imageAnnotators[element[0]] == 'undefined') {
+      return;
+    }
+    var self = Drupal.imageAnnotators[element[0]];
+    var key = element[0] + '_' + element[1] + '_' + element[2] + '_' + element[3];
+    if (typeof self.pointers[key] == 'undefined') {
+      return;
+    }
+    var pointer = self.pointers[key];
+    pointer.height = ui.size.height;
+    pointer.width = ui.size.width;
+    self.updatePointer(pointer);
+  };
+
 })(jQuery);

@@ -134,13 +134,21 @@ function image_annotator_form_field_ui_field_edit_form_alter(&$form) {
 function image_annotator_field_widget_info() {
   return array(
     'image_annotator_hidden' => array(
-      'label' => t('Image Annotator Pointer'),
+      'label' => t('Pointer'),
       'field types' => array('image_annotator'),
     ),
     'image_annotator_rectangle' => array(
-      'label' => t('Image Annotator Rectangle'),
+      'label' => t('Rectangle'),
       'field types' => array('image_annotator'),
-    )
+    ),
+    'image_annotator_pointer_draggable' => array(
+      'label' => t('Draggable Pointer'),
+      'field types' => array('image_annotator'),
+    ),
+    'image_annotator_rectangle_draggable' => array(
+      'label' => t('Draggable & Resizable Rectangle'),
+      'field types' => array('image_annotator'),
+    ),
   );
 }
 
@@ -149,13 +157,28 @@ function image_annotator_field_widget_info() {
  */
 function image_annotator_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   // support field collections
-  //$instance['widget']['type']
   $class = '';
-  if ($instance['widget']['type'] == 'image_annotator_hidden') {
-    $class = 'image-annotator-pointer';
-  }
-  elseif ($instance['widget']['type'] == 'image_annotator_rectangle') {
-    $class = 'image-annotator-rectangle';
+  $draggable = FALSE;
+  $resizable = FALSE;
+  switch ($instance['widget']['type']) {
+    case 'image_annotator_hidden':
+      $class = 'image-annotator-hidden';
+      break;
+    case 'image_annotator_rectangle':
+      $class = 'image-annotator-rectangle';
+      break;
+    case 'image_annotator_pointer_draggable':
+      $class = 'image-annotator-pointer-draggable';
+      $draggable = TRUE;
+      drupal_add_library('system', 'ui.draggable');
+      break;
+    case 'image_annotator_rectangle_draggable':
+      $class = 'image-annotator-rectangle-draggable';
+      $draggable = TRUE;
+      $resizable = TRUE;
+      drupal_add_library('system', 'ui.draggable');
+      drupal_add_library('system', 'ui.resizable');
+      break;
   }
   static $highest_delta = -1;
   //figure out if this field is part of a collection, if so, figure out which delta it has.
@@ -185,7 +208,7 @@ function image_annotator_field_widget_form(&$form, &$form_state, $field, $instan
   );
   $element['#attributes']['class'][] = 'field-annotator-' . $field['id'] . '-' . $instance['id'];
   $js_settings = array(
-    'imageAnnotator' => array($field['field_name'] => array('imagefield' => $rel, 'edit' => TRUE)),
+    'imageAnnotator' => array($field['field_name'] => array('imagefield' => $rel, 'edit' => TRUE, 'draggable' => $draggable, 'resizable' => $resizable)),
   );
   drupal_add_js($js_settings, 'setting');
   libraries_load('json2');
