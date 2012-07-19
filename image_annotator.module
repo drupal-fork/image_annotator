@@ -207,13 +207,31 @@ function image_annotator_field_widget_form(&$form, &$form_state, $field, $instan
     ),
   );
   $element['#attributes']['class'][] = 'field-annotator-' . $field['id'] . '-' . $instance['id'];
-  $js_settings = array(
-    'imageAnnotator' => array($field['field_name'] => array('imagefield' => $rel, 'edit' => TRUE, 'draggable' => $draggable, 'resizable' => $resizable)),
+  $element['#attached']['js'] = array(
+    drupal_get_path('module', 'image_annotator') . '/image_annotator.js',
+    array(
+      'data' => array(
+        'imageAnnotator' => array(
+          $field['field_name'] => array(
+            'imagefield' => $rel,
+            'edit' => TRUE,
+            'draggable' => $draggable,
+            'resizable' => $resizable,
+          )
+        ),
+      ),
+      'type' => 'setting',
+    ),
   );
-  drupal_add_js($js_settings, 'setting');
+  $element['#attached']['css'] = array(
+    drupal_get_path('module', 'image_annotator') . '/image_annotator.css',
+  );
+  $element['#pre_render'] = array('image_annotator_load_json2');
+  return $element;
+}
+
+function image_annotator_load_json2($element) {
   libraries_load('json2');
-  drupal_add_js(drupal_get_path('module', 'image_annotator') . '/image_annotator.js');
-  drupal_add_css(drupal_get_path('module', 'image_annotator') . '/image_annotator.css');
   return $element;
 }
 
