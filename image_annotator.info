@@ -1,5 +1,5 @@
-name = Imagefield annotator
-description = Allows you to link values from a field collection to an image.
+name = Image Annotator
+description = Allows you to link values to an image. Supports Field Collection.
 package = Effects
 core = 7.x
 dependencies[] = image
