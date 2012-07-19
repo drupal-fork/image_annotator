@@ -175,7 +175,7 @@
         $imageTarget.after($targetdiv);
       }
     })
-    $(context).find('.image-annotator-button').click(function(event) {
+    $(context).find('.image-annotator-button').unbind('click').click(function(event) {
       var $button = $(this);
       var element = $button.attr('id').split('__');
       var type;
@@ -207,7 +207,9 @@
         var pointer = self.addPointer(options);
         self.savePointer(pointer);
       }
-      self.toggleButton($button, false);
+      else {
+        self.toggleButton($button, false);
+      }
       event.preventDefault();
     });
   };
