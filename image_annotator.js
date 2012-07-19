@@ -20,9 +20,13 @@
           Drupal.imageAnnotators[coordfield].targetWidth = targetWidth;
           Drupal.imageAnnotators[coordfield].targetHeight = targetHeight;
           Drupal.imageAnnotators[coordfield].bindButtons(context);
-          Drupal.imageAnnotators[coordfield].bindImages(context);
-          Drupal.imageAnnotators[coordfield].readPointers(context);
-          Drupal.imageAnnotators[coordfield].drawPointers();
+          $(Drupal.imageAnnotators[coordfield]).bind('imageAnnotatorTargetLoaded', function () {
+            var self = this;
+            self.bindImages(context);
+            self.readPointers(context);
+            self.drawPointers();
+          });
+          
         });
 
       }
@@ -159,18 +163,24 @@
         if (!$imageTarget.length) {
           $imageTarget = $('.' + image + ' img').first();
         }
-        
+        $imageTarget.load(function() {
+          var $self = $(this);
+          $self.parent().find('.image-annotator-target').first().css({
+            width: $self.width(),
+            height: $self.height()
+          });
+          self.targetWidth = $imageTarget.width();
+          self.targetHeight = $imageTarget.height();
+          self.targetLoaded = true;
+          $(self).trigger('imageAnnotatorTargetLoaded');
+        });
         var $targetdiv = $('<div id="' + $(this).attr('rel') + '-target"></div>');
         $targetdiv.css({
-          width: $imageTarget.width(),
-          height: $imageTarget.height(),
           position: 'absolute',
           top: 0,
           left: 0,
           overflow: 'hidden'
         });
-        self.targetWidth = $imageTarget.width();
-        self.targetHeight = $imageTarget.height();
         $targetdiv.addClass('image-annotator-target');
         $imageTarget.after($targetdiv);
       }

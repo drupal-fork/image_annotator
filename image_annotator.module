@@ -170,14 +170,23 @@ function image_annotator_field_widget_form(&$form, &$form_state, $field, $instan
     case 'image_annotator_pointer_draggable':
       $class = 'image-annotator-pointer-draggable';
       $draggable = TRUE;
-      drupal_add_library('system', 'ui.draggable');
+      $element['#attached']['library'][] = array(
+        'system',
+        'ui.draggable'
+      );
       break;
     case 'image_annotator_rectangle_draggable':
       $class = 'image-annotator-rectangle-draggable';
       $draggable = TRUE;
       $resizable = TRUE;
-      drupal_add_library('system', 'ui.draggable');
-      drupal_add_library('system', 'ui.resizable');
+      $element['#attached']['library'][] = array(
+        'system',
+        'ui.draggable',
+      );
+      $element['#attached']['library'][] = array(
+        'system',
+        'ui.resizable',
+      );
       break;
   }
   static $highest_delta = -1;
