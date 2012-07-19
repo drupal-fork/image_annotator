@@ -4,5 +4,17 @@
  * Testswarm tests for Image Annotator
  */
 
-
+function image_annotator_testswarm_testswarm_tests() {
+  return array(
+    'image_annotator_testswarm_rectangle_draggable' => array(
+      'module' => 'Image Annotator',
+      'description' => 'Test Image Annotator\'s draggable & resizable pointer widget',
+      'js' => array(
+        drupal_get_path('module', 'image_annotator_testswarm') . '/tests/image_annotator_rectangle_draggable.test.js' => array(),
+      ),
+      'path' => 'node/add/image-annotator-testswarm',
+      'query' => array(),
+    ),
+  );
+}
 

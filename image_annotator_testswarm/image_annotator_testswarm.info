@@ -4,3 +4,4 @@ package = Effects
 core = 7.x
 dependencies[] = image_annotator
 dependencies[] = testswarm
+dependencies[] = image_annotator_testswarm_features

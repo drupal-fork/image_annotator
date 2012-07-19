@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function image_annotator_testswarm_features_install() {
+  global $user;
+  $uri = drupal_get_path('module', 'image_annotator_testswarm_features') . '/images/drupal.jpg';
+  $file = new stdClass();
+  $file->uid      = ($user->uid == 0) ? 1: $user->uid;
+  $file->status   = 0;
+  $file->filename = trim(drupal_basename($uri, '.'));
+  $file->uri      = $uri;
+  $file->filemime = file_get_mimetype($file->filename);
+  $file->filesize = filesize($uri);
+  // Copy file to the public folder. This also saves it to the database.
+  if ($file = file_copy($file, file_default_scheme() . '://')) {
+    variable_set('image_annotator_testswarm_features_file', $file->fid);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function image_annotator_testswarm_features_uninstall() {
+  variable_del('image_annotator_testswarm_features_file');
+}

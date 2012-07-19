@@ -1,0 +1,17 @@
+name = Image Annotator Testswarm Features
+description = Contains content types needed to test Image Annotator with Testswarm
+core = 7.x
+package = Features
+dependencies[] = features
+dependencies[] = field_collection_table
+dependencies[] = field_extrawidgets
+dependencies[] = fixed_field
+dependencies[] = image_annotator
+features[features_api][] = api:1
+features[field][] = field_collection_item-field_annotations-field_annotate
+features[field][] = field_collection_item-field_annotations-field_annotation_description
+features[field][] = field_collection_item-field_annotations-field_annotation_title
+features[field][] = node-image_annotator_testswarm-field_annotate_image
+features[field][] = node-image_annotator_testswarm-field_annotations
+features[node][] = image_annotator_testswarm
+files[] = image_annotator_testswarm_features.install
