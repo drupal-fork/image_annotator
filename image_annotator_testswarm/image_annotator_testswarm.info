@@ -1,0 +1,6 @@
+name = Imagefield Annotator Testswarm
+description = Testswarm Tests for Imagefield Annotator
+package = Effects
+core = 7.x
+dependencies[] = image_annotator
+dependencies[] = testswarm
