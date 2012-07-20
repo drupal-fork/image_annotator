@@ -1,10 +1,10 @@
-var drag = function (pointer, dx, dy) {
-  jQuery(pointer).simulate("drag", {
-    dx: dx || 0,
-    dy: dy || 0
-  });
-};
 (function ($, Drupal, window, document, undefined) {
+  var drag = function (pointer, dx, dy) {
+    $(pointer).simulate("drag", {
+      dx: dx || 0,
+      dy: dy || 0
+    });
+  };
   Drupal.tests.iaRectangleDraggable = {
     getInfo: function() {
       return {
@@ -28,26 +28,32 @@ var drag = function (pointer, dx, dy) {
         return function () {
           expect(2);
           var $pointer = $('#field_annotate__und__0__1__pointer');
-          var imgwidth = $('.field-name-field-annotate-image img').first().width();
-          var imgheight = $('field-name-field-annotate-image img').first().height();
+          var $img = $('.field-name-field-annotate-image img').first();
+          var imgwidth = $img.width();
+          var imgheight = $img.height();
+          var imgOffset = $img.offset();
+          // Image needs to be within the screen or simulate drag is buggy.
+          $('html, body').animate({scrollTop: imgOffset.top}, 0);
 
-          var offsetBefore = $pointer.offset();
-          var pointerdataBefore = JSON.parse('[' + $('#field_annotate__und__0__coordinates').val() + ']').splice(0, 1);
-          var positionBefore = {
-            x: parseFloat(pointerdataBefore.x, 10) * imgwidth,
-            y: parseFloat(pointerdataBefore.y, 10) * imgheight
+          var positionBefore = $pointer.position();
+          var pointerdataBefore = JSON.parse('[' + $('#field_annotate__und__0__coordinates').val() + ']')[0]
+          var savedPositionBefore = {
+            x: Math.round(parseFloat(pointerdataBefore.x, 10) * imgwidth),
+            y: Math.round(parseFloat(pointerdataBefore.y, 10) * imgheight)
           };
           drag($pointer, 50, 50);
-          var offsetAfter = $pointer.offset();
-          var pointerdataAfter = JSON.parse('[' + $('#field_annotate__und__0__coordinates').val() + ']').splice(0, 1);
-          var positionAfter = {
-            x: parseFloat(pointerdataAfter.x, 10) * imgwidth,
-            y: parseFloat(pointerdataAfter.y, 10) * imgheight
+          var positionAfter = $pointer.position();
+          var pointerdataAfter = JSON.parse('[' + $('#field_annotate__und__0__coordinates').val() + ']')[0];
+          var savedPositionAfter = {
+            x: Math.round((parseFloat(pointerdataAfter.x, 10) - (50/imgwidth)) * imgwidth),
+            y: Math.round((parseFloat(pointerdataAfter.y, 10) - (50/imgheight)) * imgheight)
           };
-          var actual = { left: offsetAfter.left, top: offsetAfter.top },
-          expected = { left: offsetBefore.left + 50, top: offsetBefore.top + 50 };
+          // allow a margin of 10px due to rounding errors.
+          var allowedMargin = 10;
+          var actual = { left: positionAfter.left, top: positionAfter.top },
+          expected = { left: positionBefore.left + 50, top: positionBefore.top + 50 };
           deepEqual(actual, expected, Drupal.t('Pointers should have the right position after dragging'));
-          deepEqual(positionBefore, positionAfter, Drupal.t('Saved positions should be correct'));
+          ok(Math.abs(savedPositionBefore.x - savedPositionAfter.x) < allowedMargin && Math.abs(savedPositionBefore.y - savedPositionAfter.y) < allowedMargin, Drupal.t('Saved positions should be within the allowed margins'));
         }
       }/*,
       resizePointer: function ($, Drupal, window, document, undefined) {
