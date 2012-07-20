@@ -1,10 +1,10 @@
+var drag = function (pointer, dx, dy) {
+  jQuery(pointer).simulate("drag", {
+    dx: dx || 0,
+    dy: dy || 0
+  });
+};
 (function ($, Drupal, window, document, undefined) {
-  var drag = function (pointer, dx, dy) {
-    $(pointer).simulate("drag", {
-      dx: dx || 0,
-      dy: dy || 0
-    });
-  };
   Drupal.tests.iaRectangleDraggable = {
     getInfo: function() {
       return {

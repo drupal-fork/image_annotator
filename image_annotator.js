@@ -21,6 +21,7 @@
           Drupal.imageAnnotators[coordfield] = new Drupal.imageAnnotator(settings);
           Drupal.imageAnnotators[coordfield].targetWidth = targetWidth;
           Drupal.imageAnnotators[coordfield].targetHeight = targetHeight;
+          Drupal.imageAnnotators[coordfield].targetLoaded = targetLoaded;
           Drupal.imageAnnotators[coordfield].bindButtons(context);
           if (targetLoaded) {
             //target is already loaded, meaning this is probably an ajax callback.
