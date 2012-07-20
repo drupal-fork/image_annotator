@@ -12,14 +12,22 @@
         $.each(Drupal.settings.imageAnnotator, function (coordfield, settings) {
           var targetWidth = 1;
           var targetHeight = 1;
+          var targetLoaded = false;
           if (typeof Drupal.imageAnnotators[coordfield] != 'undefined') {
             targetWidth = Drupal.imageAnnotators[coordfield].targetWidth;
             targetHeight = Drupal.imageAnnotators[coordfield].targetHeight;
+            targetLoaded = Drupal.imageAnnotators[coordfield].targetLoaded;
           }
           Drupal.imageAnnotators[coordfield] = new Drupal.imageAnnotator(settings);
           Drupal.imageAnnotators[coordfield].targetWidth = targetWidth;
           Drupal.imageAnnotators[coordfield].targetHeight = targetHeight;
           Drupal.imageAnnotators[coordfield].bindButtons(context);
+          if (targetLoaded) {
+            //target is already loaded, meaning this is probably an ajax callback.
+            Drupal.imageAnnotators[coordfield].bindImages(context);
+            Drupal.imageAnnotators[coordfield].readPointers(context);
+            Drupal.imageAnnotators[coordfield].drawPointers();
+          }
           $(Drupal.imageAnnotators[coordfield]).bind('imageAnnotatorTargetLoaded', function () {
             var self = this;
             self.bindImages(context);
