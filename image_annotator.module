@@ -47,7 +47,11 @@ function image_annotator_field_formatter_view ($entity_type, $entity, $field, $i
   static $highest_delta = -1;
   //figure out if this field is part of a collection, if so, figure out which delta it has.
   $settings = $instance['settings'];
-  $value = isset($items[0]['value']) ? reset(drupal_json_decode('[' . $items[0]['value'] . ']')) : array();
+  $value = array();
+  if (isset($items[0]['value'])) {
+    $value = drupal_json_decode('[' . $items[0]['value'] . ']');
+    $value = reset($value);
+  }
   $number = empty($value) ? $highest_delta + 1 : $value['delta'];
   if ($number > $highest_delta) {
     $highest_delta = $number;
