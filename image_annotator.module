@@ -47,6 +47,27 @@ function image_annotator_field_formatter_view ($entity_type, $entity, $field, $i
   static $highest_delta = -1;
   //figure out if this field is part of a collection, if so, figure out which delta it has.
   $settings = $instance['settings'];
+
+  switch ($entity_type) {
+    case 'field_collection_item':
+      $host_entity = $entity->hostEntity();
+      
+      // find what is the host type:
+      if (isset($host_entity->nid)) {
+        $entity_type = 'node';
+      }
+      elseif (isset($host_entity->tid)) {
+        $entity_type = 'taxonomy';
+      }
+      
+      // set the id what we need in js
+      $entity_id = $host_entity->nid;
+      break;
+    case 'node':
+      $entity_id = $entity->nid;
+      break;
+  }
+
   $value = array();
   if (isset($items[0]['value'])) {
     $value = drupal_json_decode('[' . $items[0]['value'] . ']');
@@ -85,9 +106,29 @@ function image_annotator_field_formatter_view ($entity_type, $entity, $field, $i
       );
     }
     $number++;
+    /*$js_settings = array(
+      'imageAnnotator' => array(
+        $field['field_name'] => array(
+          'imagefield' => $rel,
+          'edit' => FALSE
+        )
+      ),
+    );*/
     $js_settings = array(
-      'imageAnnotator' => array($field['field_name'] => array('imagefield' => $rel, 'edit' => FALSE)),
+        'imageAnnotator' => array(
+          $entity_type . '-' . $entity_id => array(
+            'type' => $entity_type,
+            'id' => $entity_id,
+            'field' => $field['field_name'],
+            'imagefield' => $rel,
+            'edit' => FALSE,
+          ),
+        ),
     );
+    
+    
+    
+    
     drupal_add_js($js_settings, 'setting');
     libraries_load('json2');
     drupal_add_js(drupal_get_path('module', 'image_annotator') . '/image_annotator.js');
@@ -160,6 +201,21 @@ function image_annotator_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function image_annotator_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  if (isset($form['#entity_type'])) {
+    $entity_type = $form['#entity_type'];
+  }
+  elseif (isset($form['#node'])) {
+    $entity_type = 'node';
+  }
+  if (isset($form['#bundle'])) {
+    $bundle = $form['#bundle'];
+  }
+  elseif (isset($form['type'])) {
+    $bundle = $form['type']['#value'];
+  }
+  //$bundle = $form['#bundle'];
+  //$entity_type = 'form';
+
   // support field collections
   $class = '';
   $draggable = FALSE;
@@ -233,12 +289,15 @@ function image_annotator_field_widget_form(&$form, &$form_state, $field, $instan
     array(
       'data' => array(
         'imageAnnotator' => array(
-          $field['field_name'] => array(
+          '#' . $bundle . '-' . $entity_type . '-' . 'form' => array(
+            'type' => $entity_type,
+            'bundle' => $bundle,
+            'field' => $field['field_name'],
             'imagefield' => $rel,
             'edit' => TRUE,
             'draggable' => $draggable,
             'resizable' => $resizable,
-          )
+          ),
         ),
       ),
       'type' => 'setting',

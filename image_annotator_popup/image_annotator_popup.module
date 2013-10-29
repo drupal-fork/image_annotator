@@ -1,0 +1,114 @@
+<?php
+/**
+ * @file
+ * This module extend the Image Annotator module with popup widget.
+ */
+
+/**
+ * The minimum version to jQuery UI Tooltip library.
+ */
+
+define('JQUERY_QTIP_MIN_PLUGIN_VERSION', '2.1.1');
+
+/**
+ * Implements hook_field_formatter_info()
+ */
+function image_annotator_popup_field_formatter_info() {
+  return array(
+    'image_annotator_popup' => array(
+      'label' => t('Image Annotator Popup'),
+      'field types' => array('field_collection'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view()
+ * 
+ * @param $entity_type: The type of $entity.
+ * @param $entity: The entity being displayed.
+ * @param $field: The field structure.
+ * @param $instance: The field instance.
+ * @param $langcode: The language associated with $items.
+ * @param $items: Array of values for this field.
+ * @param $display: The display settings to use, as found in the 'display' 
+ *                  entry of instance definitions. The array notably contains 
+ *                  the following keys and values;
+ * 
+ *                  - type: The name of the formatter to use.
+ *                  - settings: The array of formatter settings.
+ * 
+ */
+function image_annotator_popup_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  //image_annotator_popup_var_dump($items);
+  if (!empty($items) && is_array($items)) {
+    $view_mode = !empty($display['settings']['view_mode']) ? $display['settings']['view_mode'] : 'full';
+    
+    foreach ($items as $delta => $item) {
+      if ($field_collection = field_collection_field_get_entity($item)) {
+        $number = $delta + 1;
+        $element[$delta]['entity'] = $field_collection->view($view_mode);
+        $element[$delta]['#theme_wrappers'] = array('image_annotator_popup_formatter_view');
+        $element[$delta]['#attributes']['class'][] = 'image-annotator-item';
+        $element[$delta]['#attributes']['class'][] = 'image-annotator-item-' . $number;
+        
+      }
+    }
+    drupal_add_js(drupal_get_path('module', 'image_annotator_popup') . '/js/image_annotator_popup.js');
+    drupal_add_css(drupal_get_path('module', 'image_annotator_popup') . '/css/image_annotator_popup.css');
+    libraries_load('jquery_qtip');
+  }
+  
+  return $element;
+}
+
+function image_annotator_popup_theme() {
+  return array(
+    'image_annotator_popup_formatter_view' => array(
+      'render element' => 'element',
+    ),
+  );
+}
+
+/**
+ * Themes field collection with popup formatter.
+ */
+function theme_image_annotator_popup_formatter_view($variables) {
+  $element = $variables['element'];
+  return '<div' . drupal_attributes($element['#attributes']) . '>' . $element['#children'] . '</div>';
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function image_annotator_popup_libraries_info() {
+  $libraries['jquery_qtip'] = array(
+    'name' => 'jQuery qTip',
+    'vendor url' => 'http://craigsworks.com/projects/qtip/',
+    'download url' => 'http://craigsworks.com/projects/qtip/download',
+    'version arguments' => array(
+      'file' => 'jquery.qtip.min.js',
+      'pattern' => '@qTip2 v([0-9\.a-z]+)@',
+      'lines' => 12,
+    ),
+    'files' => array(
+      'js' => array(
+        'jquery.qtip.min.js',
+      ),
+      'css' => array(
+        'jquery.qtip.min.css',
+      ),
+    ),
+  );
+
+  return $libraries;
+}
+
+
+function image_annotator_popup_var_dump($var) {
+  echo '<pre>';
+  var_dump($var);
+  echo '</pre>';
+}
+?>

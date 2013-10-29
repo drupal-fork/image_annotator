@@ -7,6 +7,9 @@ span.image-annotator-pointer span, span.image-annotator-rectangle span, span.ima
 span.image-annotator-rectangle.ui-draggable {
   cursor: move;
 }
+span.image-annotator-pointer.ui-draggable {
+  cursor: move;
+}
 span.image-annotator-pointer-label{
   display: block;
 }

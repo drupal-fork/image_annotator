@@ -1,0 +1,9 @@
+name = Image Annotator Popup
+description = "Extension module to Image Annotator. You can show datas in popup window."
+package = Effects
+core = 7.x
+
+dependencies[] = field_collection
+dependencies[] = image_annotator
+dependencies[] = libraries
+dependencies[] = jquery_update

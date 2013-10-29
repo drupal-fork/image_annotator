@@ -1,0 +1,10 @@
+.field-type-image {
+  position: relative;
+}
+.image-annotator-item {
+	/*display: none;*/
+	background: #333;
+	font-size: 12px;
+	padding: 10px;
+	color: #eee;
+}

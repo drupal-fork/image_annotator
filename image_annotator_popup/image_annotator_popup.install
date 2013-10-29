@@ -1,0 +1,39 @@
+<?php
+/**
+ * Implements hook_requirements().
+ */
+function image_annotator_popup_requirements($phase) {
+  $requirements = array();
+
+  if ($phase == 'runtime') {
+    $t = get_t();
+    $library = libraries_detect('jquery_qtip');
+
+    if (empty($library['installed'])) {
+      $requirements['jquery_qtip'] = array(
+        'title' => $t('jQuery qTip plugin'),
+        'value' => $t('At least @a', array('@a' => JQUERY_QTIP_MIN_PLUGIN_VERSION)),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $t('You need to download the !jquery_qtip, extract the archive and place the jquery_qtip directory in the %path directory on your server.', array('!jquery_qtip' => l($t('jQuery qTip plugin'), $library['download url']), '%path' => 'sites/all/libraries')),
+      );
+    }
+    elseif (version_compare($library['version'], JQUERY_QTIP_MIN_PLUGIN_VERSION, '>=')) {
+      $requirements['jquery_qtip'] = array(
+        'title' => $t('jQuery qTip plugin'),
+        'severity' => REQUIREMENT_OK,
+        'value' => $library['version'],
+      );
+    }
+    else {
+      $requirements['jquery_qtip'] = array(
+        'title' => $t('jQuery qTip plugin'),
+        'value' => $t('At least @a', array('@a' => JQUERY_QTIP_MIN_PLUGIN_VERSION)),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $t('You need to download a later version of the !jquery_qtip and replace the old version located in the %path directory on your server.', array('!jquery_qtip' => l($t('jQuery qTip plugin'), $library['download url']), '%path' => $library['library path'])),
+      );
+    }
+  }
+
+  return $requirements;
+}
+?>
