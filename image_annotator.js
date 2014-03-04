@@ -7,7 +7,7 @@
         }
         else {
           $(context).find('.image-annotator-drawn-pointers').remove();
-          $(context).find('image-annotator-pointer-label').remove();
+          $(context).find('.image-annotator-pointer-label').remove();
         }
         $.each(Drupal.settings.imageAnnotator, function (entity, settings) {
           var targetWidth = 1;
@@ -141,10 +141,10 @@
           height = Math.round(parseFloat(height, 10) * self.targetHeight);
           var dataId = (typeof data.id != 'undefined') ? data.id : number;
           if (self.edit) {
-            $pointer_label.append('(<a href="#" rel="' + data.field + '_' + data.language + '_' + data.delta + '_' + dataId + '_' + entity + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
+            $pointer_label.append('(<a href="#" rel="' + data.field + '_' + data.language + '_' + data.delta + '_' + dataId + '_' + entity.replace('#', '') + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
             self.bindRemove($pointer_label);
           }
-          $pointer.attr('id', data.field + '__' + data.language + '__' + data.delta + '__' + dataId + '__pointer__' + entity);
+          $pointer.attr('id', data.field + '__' + data.language + '__' + data.delta + '__' + dataId + '__pointer__' + entity.replace('#', ''));
           var pointer = {
             pointer: $pointer,
             x: x,
