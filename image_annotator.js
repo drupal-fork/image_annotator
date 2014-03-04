@@ -210,7 +210,6 @@
           $imageTarget.attr('src', imageTargetSrc + '?t=' + new Date().getTime());
         }
 
-
         $imageTarget.load(function() {
           var $self = $(this);
           $self.parents('body').find(parent + '.image-annotator-target').first().css({
