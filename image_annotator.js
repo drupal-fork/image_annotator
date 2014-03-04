@@ -203,7 +203,7 @@
         $imageTarget.parent('div').css('position', 'relative');
         var imageTargetSrc = $imageTarget.attr('src')
         // let's check if Drupal use image derivative token:
-        if (jQuery.type(imageTargetSrc) !== 'undefined' && imageTargetSrc.indexOf('itok')) {
+        if (jQuery.type(imageTargetSrc) !== 'undefined' && imageTargetSrc.indexOf('itok') > 0) {
           $imageTarget.attr('src', imageTargetSrc + '&t=' + new Date().getTime());
         }
         else {
