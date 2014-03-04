@@ -203,6 +203,9 @@ function image_annotator_field_widget_form(&$form, &$form_state, $field, $instan
   elseif (isset($form['type'])) {
     $bundle = $form['type']['#value'];
   }
+  if (!isset($entity_type)) {
+    return $element;
+  }
 
   // Support field collections.
   $class = '';
@@ -240,7 +243,13 @@ function image_annotator_field_widget_form(&$form, &$form_state, $field, $instan
   static $highest_delta = -1;
   //figure out if this field is part of a collection, if so, figure out which delta it has.
   $settings = $instance['settings'];
-  $value = isset($items[$delta]['value']) ? reset(drupal_json_decode('[' . $items[$delta]['value'] . ']')) : array();
+  if(isset($items[$delta]['value'])) {
+    $decoded = drupal_json_decode('[' . $items[$delta]['value'] . ']');
+    $value = reset($decoded);
+  }
+  else {
+    $value = array();
+  }
   $number = empty($value) ? $highest_delta + 1 : $value['delta'];
   if ($number > $highest_delta) {
     $highest_delta = $number;
