@@ -62,21 +62,21 @@
     self.rectangleHeight = 20;
     self.draggable = settings.draggable;
     self.resizable = settings.resizable;
-    if ($(entity + ' #' + self.imagefield + ' img').length) {
-      self.toggleButton($(entity + ' .image-annotator-button'), true);
+    if ($('#' + entity + ' #' + self.imagefield + ' img').length) {
+      self.toggleButton($('#' + entity + ' .image-annotator-button'), true);
     }
     else {
-      self.toggleButton($(entity + ' .image-annotator-button'), false);
+      self.toggleButton($('#' + entity + ' .image-annotator-button'), false);
     }
-    var $imageField = $(entity + ' #' + self.imagefield + ' img');
+    var $imageField = $('#' + entity + ' #' + self.imagefield + ' img');
     if (!$imageField.length) {
-      $imageField = $(entity + ' .' + self.imagefield + '.field-type-image img');
-    }
-    if (!$imageField.length) {
-      $imageField = $(entity + ' #' + self.imagefield + ' img');
+      $imageField = $('#' + entity + ' .' + self.imagefield + '.field-type-image img');
     }
     if (!$imageField.length) {
-      $imageField = $(entity + ' .' + self.imagefield + ' img');
+      $imageField = $('#' + entity + ' #' + self.imagefield + ' img');
+    }
+    if (!$imageField.length) {
+      $imageField = $('#' + entity + ' .' + self.imagefield + ' img');
     }
     $imageField.first().parent().css({position: 'relative', display: 'block'});
     self.targetWidth = 1;
@@ -141,10 +141,10 @@
           height = Math.round(parseFloat(height, 10) * self.targetHeight);
           var dataId = (typeof data.id != 'undefined') ? data.id : number;
           if (self.edit) {
-            $pointer_label.append('(<a href="#" rel="' + data.field + '_' + data.language + '_' + data.delta + '_' + dataId + '_' + entity.replace('#', '') + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
+            $pointer_label.append('(<a href="#" rel="' + data.field + '_' + data.language + '_' + data.delta + '_' + dataId + '_' + entity + '" class="image-annotator-remove" >' + Drupal.t('Remove') + '</a>)');
             self.bindRemove($pointer_label);
           }
-          $pointer.attr('id', data.field + '__' + data.language + '__' + data.delta + '__' + dataId + '__pointer__' + entity.replace('#', ''));
+          $pointer.attr('id', data.field + '__' + data.language + '__' + data.delta + '__' + dataId + '__pointer__' + entity);
           var pointer = {
             pointer: $pointer,
             x: x,

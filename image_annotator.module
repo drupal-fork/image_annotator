@@ -277,7 +277,7 @@ function image_annotator_field_widget_form(&$form, &$form_state, $field, $instan
       'type' => 'setting',
       'data' => array(
         'imageAnnotator' => array(
-          '#' . $bundle . '-' . $entity_type . '-' . 'form' => array(
+          $bundle . '-' . $entity_type . '-' . 'form' => array(
             'type' => $entity_type,
             'bundle' => $bundle,
             'field' => $field['field_name'],
