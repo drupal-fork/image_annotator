@@ -16,10 +16,52 @@ function image_annotator_field_info() {
       'instance_settings' => array(
         'image_field' => '',
       ),
+      'property_type' => 'image_annotator',
+      'property_callbacks' => array('image_annotator_property_info_callback'),
     )
   );
 }
 
+/**
+ * Property info callback.
+ */
+function image_annotator_property_info_callback(&$info, $entity_type, $field, $instance, $field_type) {
+  $property = &$info[$entity_type]['bundles'][$instance['bundle']]['properties'][$field['field_name']];
+  $property['getter callback'] = 'image_annotator_entity_metadata_get_field_value';
+  $property['setter callback'] = 'image_annotator_entity_metadata_set_field_value';
+  unset($property['query callback']);
+}
+
+function image_annotator_entity_metadata_get_field_value($entity, array $options, $name, $entity_type, &$context) {
+  $value = entity_metadata_field_verbatim_get($entity, $options, $name, $entity_type, $context);
+  if ($context['field']['cardinality'] == 1 && !is_null($value)) {
+    return drupal_json_decode('[' . $value['value'] . ']');
+  }
+  foreach ($value as &$val) {
+    $val = '[' . $val['value'] . ']';
+  }
+  return array_map('drupal_json_decode', $value);
+}
+
+function image_annotator_entity_metadata_set_field_value($entity, $name, $items, $langcode, $entity_type) {
+  $field = field_info_field($name);
+  if ($field['cardinality'] == 1) {
+    $value = image_annotator_entity_metadata_extract_value($items);
+  }
+  else {
+    $value = array_map('image_annotator_entity_metadata_extract_value', $items);
+  }
+}
+
+function image_annotator_entity_metadata_extract_value($item) {
+  // One marker.
+  if (is_object($item) || (is_array($item) && isset($item['x']))) {
+    return drupal_json_encode((object)$item);
+  }
+
+  // Multiple markers.
+  return implode(',', array_map('image_annotator_entity_metadata_extract_value', $item));
+}
 /**
  * Implements hook_field_is_empty()
  */
