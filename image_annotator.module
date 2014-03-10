@@ -34,7 +34,10 @@ function image_annotator_property_info_callback(&$info, $entity_type, $field, $i
 
 function image_annotator_entity_metadata_get_field_value($entity, array $options, $name, $entity_type, &$context) {
   $value = entity_metadata_field_verbatim_get($entity, $options, $name, $entity_type, $context);
-  if ($context['field']['cardinality'] == 1 && !is_null($value)) {
+  if (is_null($value)) {
+    return NULL;
+  }
+  if ($context['field']['cardinality'] == 1) {
     return drupal_json_decode('[' . $value['value'] . ']');
   }
   foreach ($value as &$val) {
