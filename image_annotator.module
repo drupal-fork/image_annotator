@@ -63,6 +63,27 @@ function image_annotator_field_formatter_view ($entity_type, $entity, $field, $i
       // set the id what we need in js
       $entity_id = $host_entity->nid;
       break;
+    case 'multifield':
+
+      $fields = array_keys(field_read_fields(array('type' => $entity->type)));
+      $instances = field_read_instances(array('field_name' => $fields));
+      if (count($instances == 1)) {
+        $entity_type = $instances[0]['entity_type'];
+        $entity_id = $entity->parent_id;
+      }
+      else {
+        $possible_types = array();
+        foreach ($instances as $i) {
+          $possible_types[$i['entity_type']] = $i['entity_type'];
+          $possible_bundles[$i['bundle']]= $i['bundle'];
+        }
+        $candidates = field_read_instances(array('field_name' => $settings['image_field'], 'entity_type' => $possible_types, 'bundle' => $possible_bundles));
+        // This is as far as we can filter...
+        $candidate = reset($candidates);
+        $entity_id = $entity->parent_id;
+        $entity_type = $candidate['entity_type'];
+      }
+      break;
     case 'node':
       $entity_id = $entity->nid;
       break;
@@ -262,8 +283,8 @@ function image_annotator_field_widget_form(&$form, &$form_state, $field, $instan
       'class' => array('image-annotator-pointers'),
     )
   );
-  // Field collection.
-  if (isset($element['#entity_type']) && $element['#entity_type'] == 'field_collection_item') {
+  // Field collection or multifield.
+  if (isset($element['#entity_type']) && in_array($element['#entity_type'], array('field_collection_item', 'multifield'))) {
     $parents = (empty($form['#field_parents']) ? '' : implode('-', $form['#field_parents']) . '-');
   }
   // Normal.
