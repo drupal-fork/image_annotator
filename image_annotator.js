@@ -550,7 +550,7 @@
   };
 
   Drupal.imageAnnotator.prototype.dragStop = function (event, ui) {
-    var element = $(event.target).attr('id').split('__');
+    var element = ui.helper.attr('id').split('__');
     if (typeof Drupal.imageAnnotators[element[5]] === 'undefined') {
       return;
     }
@@ -566,7 +566,7 @@
   };
 
   Drupal.imageAnnotator.prototype.resizeStop = function (event, ui) {
-    var element = $(event.target).attr('id').split('__');
+    var element = ui.helper.attr('id').split('__');
     if (typeof Drupal.imageAnnotators[element[5]] === 'undefined') {
       return;
     }
