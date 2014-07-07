@@ -1,4 +1,17 @@
 (function ($){
+  $(window).resize(function() {
+    // Recalculate target size on window resize.
+    $('.image-annotator-target').each(function (index, Element) {
+      var target = $(Element),
+        image = target.parents('.field-type-image').first().find('img').first(),
+        css = {
+          width: image.width(),
+          height: image.height()
+        }
+        target.css(css);
+    });
+  });
+
   Drupal.behaviors.imageAnnotator = {
     attach: function (context) {
       if ($(context).is('form') || typeof Drupal.imageAnnotators === 'undefined') {
@@ -494,6 +507,12 @@
       top: pointer.y - ($pointer.height()/2),
       position: 'absolute'
     };
+    if (!self.edit) {
+      // Allow to keep relative position on resize.
+      css.left = ((css.left / self.targetWidth) * 100).toFixed(1) + '%';
+      css.top = ((css.top / self.targetHeight) * 100).toFixed(1) + '%';
+    }
+
     if (pointer.type === 'rectangle') {
       var additional_css = {
         display: 'block',
