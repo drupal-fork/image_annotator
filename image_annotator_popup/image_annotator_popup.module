@@ -41,7 +41,7 @@ function image_annotator_popup_field_formatter_info() {
  */
 function image_annotator_popup_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
-  //image_annotator_popup_var_dump($items);
+
   if (!empty($items) && is_array($items)) {
     $view_mode = !empty($display['settings']['view_mode']) ? $display['settings']['view_mode'] : 'full';
     
@@ -104,11 +104,3 @@ function image_annotator_popup_libraries_info() {
 
   return $libraries;
 }
-
-
-function image_annotator_popup_var_dump($var) {
-  echo '<pre>';
-  var_dump($var);
-  echo '</pre>';
-}
-?>
